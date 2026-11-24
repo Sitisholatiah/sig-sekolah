@@ -1,0 +1,61 @@
+{
+  "type": "FeatureCollection",
+  "name": "kecamatan_banjarmasin_sementara",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "kecamatan": "Banjarmasin Barat" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [114.535, -3.265], [114.575, -3.265], [114.575, -3.335],
+          [114.535, -3.335], [114.535, -3.265]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kecamatan": "Banjarmasin Utara" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [114.575, -3.265], [114.645, -3.265], [114.645, -3.300],
+          [114.575, -3.300], [114.575, -3.265]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kecamatan": "Banjarmasin Tengah" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [114.575, -3.300], [114.605, -3.300], [114.605, -3.335],
+          [114.575, -3.335], [114.575, -3.300]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kecamatan": "Banjarmasin Timur" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [114.605, -3.300], [114.645, -3.300], [114.645, -3.335],
+          [114.605, -3.335], [114.605, -3.300]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kecamatan": "Banjarmasin Selatan" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [114.535, -3.335], [114.645, -3.335], [114.645, -3.375],
+          [114.535, -3.375], [114.535, -3.335]
+        ]]
+      }
+    }
+  ]
+}
