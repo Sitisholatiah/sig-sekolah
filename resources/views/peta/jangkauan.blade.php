@@ -47,26 +47,44 @@
     const selJenjang = document.getElementById('jenjang');
     const selStatus = document.getElementById('status');
 
-    let semua = [];
-    let titik = null;   // titik terakhir yang diklik [lat, lng]
+    let titik = null;          // titik terakhir yang diklik [lat, lng]
+    let hasilTerakhir = [];    // BARU: fitur sekolah dalam radius (untuk klik daftar)
+    let permintaanKe = 0;      // BARU: penanda agar respons lama tidak menimpa yang baru
 
-    // Data diambil ulang dari server setiap filter jenjang/status berubah
-    async function muatData() {
+    // DIHAPUS: variabel "semua" dan fungsi muatData().
+    // Penyaringan radius, jenjang, dan status kini dilakukan database (PostGIS).
+
+    async function analisis() {
+        if (!titik) return;
+
+        const radiusKm = parseFloat(selRadius.value);
+        const nomor = ++permintaanKe;
+
+        // BARU: minta sekolah dalam radius ke server (ST_DWithin), sudah terurut dari terdekat
+        const param = new URLSearchParams({
+            lat: titik[0],
+            lng: titik[1],
+            radius: radiusKm * 1000,   // server memakai meter
+        });
+        if (selJenjang.value) param.set('jenjang', selJenjang.value);
+        if (selStatus.value) param.set('status', selStatus.value);
+
+        let fitur;
         try {
-            semua = await Peta.ambilSekolah(selJenjang.value, selStatus.value);
+            const res = await fetch('/data/sekolah/terdekat?' + param.toString());
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            fitur = (await res.json()).features;
         } catch (err) {
             console.error(err);
             panel.style.display = 'block';
             panel.textContent = 'Data sekolah tidak dapat dimuat.';
-            return false;
+            return;
         }
-        return true;
-    }
 
-    function analisis() {
-        if (!titik) return;
+        // Abaikan bila sudah ada klik atau filter yang lebih baru
+        if (nomor !== permintaanKe) return;
 
-        const radiusKm = parseFloat(selRadius.value);
+        hasilTerakhir = fitur;
 
         lapisan.clearLayers();
         marker.clearLayers();
@@ -83,11 +101,11 @@
             fillColor: '#ef4444', fillOpacity: 1,
         }).addTo(lapisan);
 
-        // Sekolah di dalam lingkaran: jarak Haversine <= radius
-        const dalam = semua
-            .map((f) => ({ fitur: f, jarak: Peta.jarakKm(titik, Peta.latlng(f)) }))
-            .filter((d) => d.jarak <= radiusKm)
-            .sort((a, b) => a.jarak - b.jarak);
+        // BARU: jarak sudah dihitung PostGIS (meter), diubah ke km untuk tampilan
+        const dalam = fitur.map((f) => ({
+            fitur: f,
+            jarak: f.properties.jarak_m / 1000,
+        }));
 
         dalam.forEach((d) => {
             L.circleMarker(Peta.latlng(d.fitur), {
@@ -140,10 +158,9 @@
 
     selRadius.addEventListener('change', analisis);
 
+    // BARU: ganti filter cukup memanggil analisis() lagi, tanpa muat ulang semua data
     [selJenjang, selStatus].forEach((el) => {
-        el.addEventListener('change', async () => {
-            if (await muatData()) analisis();
-        });
+        el.addEventListener('change', analisis);
     });
 
     // Klik pada daftar: buka popup sekolah (event delegation)
@@ -151,12 +168,12 @@
         const li = e.target.closest('[data-npsn]');
         if (!li) return;
 
-        const f = semua.find((x) => x.properties.npsn === li.dataset.npsn);
+        const f = hasilTerakhir.find((x) => x.properties.npsn === li.dataset.npsn);
         if (f) {
             L.popup().setLatLng(Peta.latlng(f)).setContent(Peta.popup(f)).openOn(map);
         }
     });
 
-    muatData();
+    // DIHAPUS: muatData() di akhir skrip tidak diperlukan lagi
 </script>
 @endpush

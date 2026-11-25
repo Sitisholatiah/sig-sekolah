@@ -54,19 +54,22 @@ class PetaController extends Controller
         return view('peta.jangkauan');
     }
 
-    // BARU: sekolah dalam radius tertentu memakai PostGIS (pengganti Haversine di browser)
+    // DIPERBARUI: sekolah dalam radius tertentu memakai PostGIS (pengganti Haversine di browser)
+    // Kini mendukung filter jenjang dan status, serta properti lengkap untuk Peta.popup()
     public function terdekat(Request $request)
     {
         $data = $request->validate([
-            'lat'    => ['required', 'numeric', 'between:-90,90'],
-            'lng'    => ['required', 'numeric', 'between:-180,180'],
-            'radius' => ['nullable', 'numeric', 'min:1', 'max:5000'], // meter
+            'lat'     => ['required', 'numeric', 'between:-90,90'],
+            'lng'     => ['required', 'numeric', 'between:-180,180'],
+            'radius'  => ['nullable', 'numeric', 'min:1', 'max:5000'], // meter
+            'jenjang' => ['nullable', 'string'],
+            'status'  => ['nullable', 'string'],
         ]);
 
         $radius = $data['radius'] ?? 1000;
         $titik  = 'extensions.ST_SetSRID(extensions.ST_MakePoint(CAST(? AS float8), CAST(? AS float8)), 4326)::extensions.geography';
 
-        $features = Sekolah::query()
+        $features = Sekolah::with('profil')
             ->selectRaw(
                 "sekolahs.*, extensions.ST_Distance(lokasi, $titik) AS jarak_m",
                 [$data['lng'], $data['lat']]
@@ -75,6 +78,8 @@ class PetaController extends Controller
                 "extensions.ST_DWithin(lokasi, $titik, CAST(? AS float8))",
                 [$data['lng'], $data['lat'], $radius]
             )
+            ->when($data['jenjang'] ?? null, fn ($q, $j) => $q->where('jenjang', $j))
+            ->when($data['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
             ->orderBy('jarak_m')
             ->get()
             ->map(fn ($s) => [
@@ -84,14 +89,20 @@ class PetaController extends Controller
                     'coordinates' => [$s->longitude, $s->latitude],
                 ],
                 'properties' => [
-                    'npsn'      => $s->npsn,
-                    'nama'      => $s->nama,
-                    'jenjang'   => $s->jenjang,
-                    'status'    => $s->status,
-                    'alamat'    => $s->alamat,
-                    'kecamatan' => $s->kecamatan,
-                    'jarak_m'   => round($s->jarak_m),
-                    'url'       => route('publik.sekolah.show', ['sekolah' => $s->npsn]),
+                    'npsn'           => $s->npsn,
+                    'nama'           => $s->nama,
+                    'jenjang'        => $s->jenjang,
+                    'status'         => $s->status,
+                    'alamat'         => $s->alamat,
+                    'kecamatan'      => $s->kecamatan,
+                    'telepon'        => $s->telepon,
+                    'kepala_sekolah' => $s->profil?->kepala_sekolah,
+                    'akreditasi'     => $s->profil?->akreditasi,
+                    'jumlah_siswa'   => $s->profil?->jumlah_siswa,
+                    'jumlah_guru'    => $s->profil?->jumlah_guru,
+                    'logo_url'       => $s->profil?->logoUrl(),
+                    'url'            => route('publik.sekolah.show', ['sekolah' => $s->npsn]),
+                    'jarak_m'        => round($s->jarak_m),
                 ],
             ]);
 
