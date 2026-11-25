@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use App\Enums\Role; // BARU
+use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute; // BARU
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,17 +18,24 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // DIHAPUS: konstanta ROLE_ADMIN, ROLE_DINAS, ROLE_SEKOLAH
-    // (diganti enum App\Enums\Role)
-
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'role' => Role::class, // BARU
+            'role' => Role::class,
         ];
+    }
+
+    // BARU: email selalu disimpan huruf kecil dan tanpa spasi di tepi
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value === null
+                ? null
+                : mb_strtolower(trim($value)),
+        );
     }
 
     public function sekolah(): BelongsTo
