@@ -9,7 +9,7 @@
 <body class="min-h-screen bg-gray-100 flex items-center justify-center p-4"> 
 <div class="w-full max-w-md bg-white rounded-lg shadow p-8"> 
     <h1 class="text-2xl font-bold text-blue-800">SIG Sekolah</h1> 
-    <p class="text-gray-600 mb-6">Masuk untuk mengelola data sekolah.</p> 
+    <p class="text-gray-600 mb-6">Masuk untuk mengelola data sekolah. (uji pembaruan)</p> 
   
     <form method="POST" action="{{ route('login') }}" class="space-y-4"> 
         @csrf 
