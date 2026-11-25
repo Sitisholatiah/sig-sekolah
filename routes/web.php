@@ -23,6 +23,7 @@ Route::controller(PetaController::class)->group(function () {
     Route::get('/jangkauan', 'jangkauan')->name('peta.jangkauan');
     Route::get('/data/sekolah', 'geojson')->name('peta.data');
     Route::get('/data/wilayah', 'geojsonWilayah')->name('peta.data.wilayah');
+    Route::get('/data/sekolah/terdekat', [PetaController::class, 'terdekat']);
 });
 
 // Profil publik per sekolah (tanpa login), dibuka dari popup peta

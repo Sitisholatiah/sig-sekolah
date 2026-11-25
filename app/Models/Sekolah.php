@@ -13,6 +13,9 @@ class Sekolah extends Model
         'kecamatan', 'telepon', 'latitude', 'longitude',
     ];
 
+    // BARU: kolom geography tidak ikut ke JSON
+    protected $hidden = ['lokasi'];
+
     protected function casts(): array
     {
         return [
